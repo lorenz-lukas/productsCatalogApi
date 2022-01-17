@@ -9,24 +9,22 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
 from pathlib import Path
+from os import getenv
+from logging import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$%1e@mm_ra%^g4t@estuww8q!4g=z7*s!gxcogh$owvxjj4wj&'
+SECRET_KEY = getenv("SECRET_KEY", "oi")
+ENV = getenv("ENV", "development")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -38,9 +36,122 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg',
     'corsheaders',
     'products'
 ]
+
+REST_FRAMEWORK = { 
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_PARSER_CLASSES': [
+       'rest_framework.parsers.FormParser',
+       'rest_framework.parsers.MultiPartParser',
+       'rest_framework.parsers.JSONParser',
+    ]
+}
+
+
+# SWAGGER_SETTINGS = {
+#     "VALIDATOR_URL": [""],
+#     'JSON_EDITOR': True,
+#     "exclude_url_names": ['docs', ],
+#     "exclude_namespaces": [],
+#     "api_version": '0.1',
+#     "SUPPORTED_SUBMIT_METHODS": [
+#         'get',
+#         'post',
+#         'put',
+#         'delete'
+#     ],
+#     'USE_SESSION_AUTH': False,
+#     'SECURITY_DEFINITIONS': {
+#         'oauth2': {
+#             'type': 'apiKey',
+#             'description': 'Personal API Key authorization',
+#             'name': 'Authorization',
+#             'in': 'header',
+#         }
+#     },
+#     'APIS_SORTER': 'alpha',
+#     "SHOW_REQUEST_HEADERS": True,
+#     "VALIDATOR_URL": False,
+#     "api_key": 'veristoken fbe16f3a4c292c774c54', # An API key
+#     'REFETCH_SCHEMA_ON_LOGOUT': True,
+#     'info': {
+#         'contact': 'apiteam@wordnik.com',
+#         'description': 'This is a sample server Petstore server. '
+#                         'You can find out more about Swagger at '
+#                         '<a href="http://swagger.wordnik.com">'
+#                         'http://swagger.wordnik.com</a> '
+#                         'or on irc.freenode.net, #swagger. '
+#                         'For this sample, you can use the api key '
+#                         '"special-key" to test '
+#                         'the authorization filters',
+#         'license': 'Apache 2.0',
+#         'licenseUrl': 'http://www.apache.org/licenses/LICENSE-2.0.html',
+#         'termsOfServiceUrl': 'http://helloreverb.com/terms/',
+#         'title': 'Products Catalog API',
+#     },
+# }
+
+# SWAGGER_SETTINGS = {
+#     'exclude_url_names': ['docs'],
+#     'exclude_namespaces': [],
+#     'api_version': '0.1',
+#     'api_path': '/',
+#     'relative_paths': False,
+#     'enabled_methods': [
+#         'get',
+#         'post',
+#         'put',
+#         'patch',
+#         'delete'
+#     ],
+#     'api_key': 'test',
+#     'is_authenticated': False,
+#     'is_superuser': False,
+#     'unauthenticated_user': 'django.contrib.auth.models.AnonymousUser',
+#     'permission_denied_handler': None,
+#     'resource_access_handler': None,
+#     # 'base_path':'helloreverb.com/docs',
+#     'info': {
+#         'contact': 'apiteam@wordnik.com',
+#         'description': 'This is a sample server Petstore server. '
+#                        'You can find out more about Swagger at '
+#                        '<a href="http://swagger.wordnik.com">'
+#                        'http://swagger.wordnik.com</a> '
+#                        'or on irc.freenode.net, #swagger. '
+#                        'For this sample, you can use the api key '
+#                        '"special-key" to test '
+#                        'the authorization filters',
+#         'license': 'Apache 2.0',
+#         'licenseUrl': 'http://www.apache.org/licenses/LICENSE-2.0.html',
+#         'termsOfServiceUrl': 'http://helloreverb.com/terms/',
+#         'title': 'Swagger Sample App',
+#     },
+#     'doc_expansion': 'none',
+# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': getenv('LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
+config.dictConfig(LOGGING)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -67,6 +178,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries' : {
+                'staticfiles': 'django.templatetags.static', 
+            }
         },
     },
 ]
@@ -130,3 +244,15 @@ CORS_ORIGIN_ALLOW_ALL = True
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if ENV == 'production':
+    DEBUG = False
+    SECRET_KEY = getenv('SECRET_KEY')
+    SESSION_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_REDIRECT_EXEMPT = []
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
